@@ -1,0 +1,14 @@
+{
+  "name": "sjs_hw",
+  "version": "0.0.1",
+  "description": "This is the homework for this course: Server Side JavaScript",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Richard Varadi",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
