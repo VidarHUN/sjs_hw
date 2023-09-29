@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Add Recipes</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <!-- <script src="index.js"></script> -->
+  <!-- Navbar -->
+  <ul class="navbar">
+    <li><a href="recipes.html">Recipes</a></li>
+    <li><a href="add_recipes.html">Add Recipes</a></li>
+    <li><a href="chefs.html">Chefs</a></li>
+    <li><a href="add_chefs.html">Add Chefs</a></li>
+  </ul>
+  <!-- /Navbar -->
+
+  <div class="content-container">
+    <h1>Recipe Form</h1>
+    <form action="#" method="post" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required>
+      </div>
+      <div class="form-group">
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" rows="4" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="ingredients">Ingredients:</label>
+        <textarea id="ingredients" name="ingredients" rows="4" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="instructions">Instructions:</label>
+        <textarea id="instructions" name="instructions" rows="4" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="chef">Chef:</label>
+        <input type="text" id="chef" name="chef" required>
+      </div>
+      <div class="form-group">
+        <label for="foodImage">Picture of the Food:</label>
+        <input type="file" id="foodImage" name="foodImage" accept="image/*" required>
+      </div>
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+</body>
+
+</html>
