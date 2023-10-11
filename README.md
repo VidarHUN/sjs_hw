@@ -1,4 +1,5 @@
 **Név**: Váradi Richárd Tamás
+
 **Neptun**: XA5OZH
 
 Az elképzelt feladat egy recept megosztó platform, ahol séfek szerint lehet recepteket keresni.
@@ -6,6 +7,7 @@ Az elképzelt feladat egy recept megosztó platform, ahol séfek szerint lehet r
 ## Enitánsok
 
 **Recept**:
+
 - **Attribútumok**
 	- Cím
 	- Leírás
@@ -19,6 +21,7 @@ Az elképzelt feladat egy recept megosztó platform, ahol séfek szerint lehet r
 	- Törlés
 
 **Séf**
+
 - **Attribútumok**
 	- Név
 	- Bio
@@ -28,22 +31,6 @@ Az elképzelt feladat egy recept megosztó platform, ahol séfek szerint lehet r
 	- Frissítés
 	- Törlés
 
-## Nézetek
-1. Recept létrehozó és szerkesztő nézet
-2. Recept böngésző nézet
-3. Séf létrehozó és szerkesztő nézet
-4. Séf böngésző nézet
-5. Séfek receptjei nézet
-
-![views](js.png)
-
-## Technológia
-
-- Node.js
-- Express.js
-- MongoDB
-- HTML, CSS, JavaScript
-- React
 ## API
 
 - /api/recipes/:
@@ -59,3 +46,13 @@ Az elképzelt feladat egy recept megosztó platform, ahol séfek szerint lehet r
 	- PUT /api/chefs/:id - Séf frissítése ID alapján
 	- DELETE /api/chefs/:id - Séf törlése ID alapján
 	- GET /api/chefs - Séfek listázása
+
+
+## Nézetek
+1. Recept létrehozó és szerkesztő nézet
+2. Recept böngésző nézet
+3. Séf létrehozó és szerkesztő nézet
+4. Séf böngésző nézet
+5. Séfek receptjei nézet
+
+![views](js.png)
