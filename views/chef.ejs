@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Chef</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <%- include('navbar') %>
+
+    <div class="content-container">
+        <img src="https://placehold.co/600" alt="Chef Image">
+        <h1><%= chefData.name %></h1>
+        <h2>Bio</h2>
+        <p><%= chefData.bio %></p>
+    </div>
+
+</body>
+
+</html>

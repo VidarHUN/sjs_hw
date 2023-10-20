@@ -1,14 +1,25 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
+const {resolve} = require('path');
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+const css = resolve('views/style.css');
 
 // In-memory data storage
 // TODO: Replace with MongoDB
-let chefs = [];
-let recipes = [];
+var chefList = require('./data.js').chefs;
+var recipeList = require('./data.js').recipes;
+
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.set('view engine', 'ejs');
+app.use(express.static(css));
+
+app.get('*/style.css', (req, res) => {
+  res.setHeader('Content-Type', 'text/css');
+  res.sendFile(css);
+});
 
 // Chef routes and controller
 const chefRouter = express.Router();
@@ -18,43 +29,46 @@ const chefRouter = express.Router();
 // The user sends every information in the body
 chefRouter.post('/', (req, res) => {
   const chef = req.body;
-  chefs.push(chef);
+  chefList.push(chef);
   res.json(chef);
 });
 
 // GET /api/chefs
 // Return all chefs from the collection
 chefRouter.get('/', (req, res) => {
-  res.json(chefs);
+  let chefs = chefList;
+  res.render('chefs', {chefs});
+  // res.json(chefs);
 });
 
-// GET /api/chefs/:chefID
+// GET /api/chefs/:chefId
 // Return only chef
 // The user has to define the chef's name with an ID
-chefRouter.get(':chefID', (req, res) => {
-  const chefID = req.params.chefID;
-  const chefData = chefs.filter((chef) => chef.id === chefID);
-  res.json(chefData);
+chefRouter.get('/:chefId', (req, res) => {
+  const chefId = parseInt(req.params.chefId);
+  const chefData = chefList.find((chef) => chef.id === chefId);
+  res.render('chef', {chefData});
+  // res.json(chefData);
 });
 
-// PUT /api/chefs/:chefID
+// PUT /api/chefs/:chefId
 // Update a chef object in the collection
-chefRouter.put(':chefID', (req, res) => {
-  const chefID = req.params.chefID;
-  const index = chefs.findIndex(obj => {
-    return obj.id === chefID;
+chefRouter.put(':chefId', (req, res) => {
+  const chefId = req.params.chefId;
+  const index = chefList.findIndex(obj => {
+    return obj.id === chefId;
   });
   if (index !== -1) {
-    chefs[index] = req.body;
+    chefList[index] = req.body;
   }
-  res.json(chefs);
+  res.json(chefList);
 });
 
-// DELETE /api/chefs/:chefID
+// DELETE /api/chefs/:chefId
 // Delete chef from collection based on ID
-chefRouter.delete(':chefID', (req, res) => {
-  const chefID = req.params.chefID;
-  chefs = chefs.filter(item => item.id !== chefID);
+chefRouter.delete(':chefId', (req, res) => {
+  const chefId = req.params.chefId;
+  chefs = chefList.filter(item => item.id !== chefId);
   res.json(chefs);
 });
 
@@ -69,63 +83,86 @@ const recipeRouter = express.Router();
 // POST /api/recipes
 // Add recipe to the collection
 recipeRouter.post('/', (req, res) => {
-  const recipe = req.body;
-  recipes.push(recipe);
-  res.json(recipe);
+  const recipeObj = req.body;
+  recipeLists.push(recipeObj);
+  let recipes = recipeList;
+  res.json(recipes);
 });
 
 // GET /api/recipes
 // Return all recipes from collection
 recipeRouter.get('/', (req, res) => {
-  res.json(recipes);
+  // res.json(recipes);
+  const chefId = parseInt(req.query.chef);
+  if (chefId) {
+    const recipeData = recipeList.find((recipe) => recipe.chefId === chefId);
+    // res.json(recipeData);
+    // console.log(recipeData);
+    res.render('food', {recipeData});
+  } else {
+    let recipes = recipeList;
+    res.render('recipes', {recipes});
+  }
 });
 
 // GET /api/recipes?chef=id
 // Return recipes which are connected to a particular chef
-chefRouter.get('/', (req, res) => {
-  const chef = req.query.chef;
-  const recipeData = recipes.filter((recipe) => recipe.chef === chef);
-  res.json(recipeData);
-});
+// recipeRouter.get('/', (req, res) => {
+//   console.log("stom");
+//   const chef = req.query.chef;
+//   const recipeData = recipes.filter((recipe) => recipe.chefId === chef);
+//   res.json(recipeData);
+//   // res.render('food', {recipeData});
+// });
 
-// GET /api/recipes/:recipeID
+// GET /api/recipes/:recipeId
 // Return only recipe
 // The user has to define the recipe's name with an ID
-chefRouter.get(':recipeID', (req, res) => {
-  const recipeID = req.params.recipeID;
-  const recipeData = recipes.filter((recipe) => recipe.id === recipeID);
-  res.json(recipeData);
+recipeRouter.get('/:recipeId', (req, res) => {
+  const recipeId = parseInt(req.params.recipeId);
+  const recipeData = recipeList.find((recipe) => recipe.id === recipeId);
+  res.render('food', {recipeData});
 });
 
 
-// PUT /api/recipes/:recipeID
+// PUT /api/recipes/:recipeId
 // Update a recipe object in the collection
-chefRouter.put(':recipeID', (req, res) => {
-  const recipeID = req.params.recipeID;
-  const index = recipes.findIndex(obj => {
-    return obj.id === recipeID;
+recipeRouter.put(':recipeId', (req, res) => {
+  const recipeId = req.params.recipeId;
+  const index = recipeList.findIndex(obj => {
+    return obj.id === recipeId;
   });
   if (index !== -1) {
-    recipes[index] = req.body;
+    recipeList[index] = req.body;
   }
+  let recipes = recipeList;
   res.json(recipes);
 });
 
-// DELETE /api/recipes/:recipeID
+// DELETE /api/recipes/:recipeId
 // Delete recipe from collection based on ID
-chefRouter.delete(':recipeID', (req, res) => {
-  const recipeID = req.params.recipeID;
-  recipes = recipes.filter(item => item.id !== recipeID);
+recipeRouter.delete(':recipeId', (req, res) => {
+  const recipeId = req.params.recipeId;
+  recipes = recipeList.filter(item => item.id !== recipeId);
   res.json(recipes);
 });
 
 app.use('/api/recipes', recipeRouter);
 
+app.get('/api/add_recipes', (req, res) => {
+  res.render('add_recipes');
+});
+
+app.get('/api/add_chefs', (req, res) => {
+  res.render('add_chefs');
+});
+
 // Get recipes by chef
-app.get('/api/chefs/:chefName/recipes', (req, res) => {
-  const chefName = req.params.chefName;
-  const chefRecipes = recipes.filter((recipe) => recipe.chef === chefName);
-  res.json(chefRecipes);
+app.get('/api/chefs/:chefId/recipes', (req, res) => {
+  const chefId = parseInt(req.params.chefId);
+  const recipes = recipeList.filter((recipe) => recipe.chefId === chefId);
+  res.render('recipes', {recipes});
+  // res.json(chefRecipes);
 });
 
 // Start the server

@@ -1,0 +1,28 @@
+<!ejs>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Chefs</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <%- include('navbar') %>
+
+  <div class="card-container">
+    <% for (const chef of chefs) { %>
+      <div class="card" onclick="window.location.href='chef.html'">
+        <div class="card-title"><%= chef.name %></div>
+        <img class="card-image" src="https://placehold.co/200" alt="Card Image">
+        <p><%= chef.bio %></p>
+      </div>
+    <% } %>
+  </div>
+
+</body>
+
+</ejs>
