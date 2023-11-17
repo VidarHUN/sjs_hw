@@ -7,41 +7,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Food</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" type="text/css" href="/styles/style.css">
 </head>
 
 <body>
     <%- include('navbar') %>
 
     <div class="content-container">
-        <% console.log('recipeData in EJS template:', recipeData); %>
-        <img src="https://placehold.co/600" alt="Recipe Image">
-        <h1><%= recipeData.title %></h1>
+        <img src="<%= recipe.foodImage %>" alt="Recipe Image" width="600" height="600">
+        <h1><%= recipe.title %></h1>
         <h2>Description</h2>
-        <p><%= recipeData.description %></p>
+        <p><%= recipe.description %></p>
 
         <h2>Ingredients</h2>
-        <% if (recipeData.ingredients) { %>
+        <% if (recipe.ingredients) { %>
         <ul>
-            <% for (const ingredient of recipeData.ingredients) { %>
+            <% for (const ingredient of recipe.ingredients) { %>
                 <li><%= ingredient %></li>
             <% } %>
         </ul>
         <% } %>
 
         <h2>Instructions</h2>
-        <% if (recipeData.instructions) { %>
+        <% if (recipe.instructions) { %>
         <ol>
-            <% for (const step of recipeData.instructions) { %>
+            <% for (const step of recipe.instructions) { %>
                 <li><%= step %></li>
             <% } %>
         </ol>
         <% } %>
 
         <h2>Chef</h2>
-        <p><a href="/api/chefs/<%- recipeData.chefId %>"><%= recipeData.chef %></a></p>
-    </div>
+        <p><a href="/api/recipes?chefId=<%- recipe.chefId %>"><%= recipe.chef %></a></p>
 
+        <h2>Update</h2>
+        <p><a href="/api/recipes/update_recipe/<%= recipe._id %>">Update</a></p>
+
+        <h2>Delete Recipe</h2>
+        <button onclick="deleteRecipe('<%= recipe._id %>')">Delete Recipe</button>
+
+        <script>
+            async function deleteRecipe(recipeId) {
+                const confirmation = confirm('Are you sure you want to delete this recipe?');
+                if (confirmation) {
+                    try {
+                        const response = await fetch(`/api/recipes/${recipeId}`, {
+                            method: 'DELETE',
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+
+                        console.log('Recipe deleted successfully');
+                        window.location.href = '/api/recipes';
+                    } catch (error) {
+                        console.error('Error deleting recipe:', error.message);
+                    }
+                }
+            }
+        </script>
+    </div>
 </body>
 
 </ejs>

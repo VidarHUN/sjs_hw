@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Chefs</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" type="text/css" href="/styles/style.css">
 </head>
 
 <body>
@@ -15,14 +15,13 @@
 
   <div class="card-container">
     <% for (const chef of chefs) { %>
-      <div class="card" onclick="window.location.href='chef.html'">
+      <div class="card" onclick="window.location.href='/api/chefs/<%- chef._id %>'">
         <div class="card-title"><%= chef.name %></div>
-        <img class="card-image" src="https://placehold.co/200" alt="Card Image">
+        <img class="card-image" src="<%= chef.chefImage %>" alt="Card Image" width="200" height="200">
         <p><%= chef.bio %></p>
       </div>
     <% } %>
   </div>
-
 </body>
 
 </ejs>

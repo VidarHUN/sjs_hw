@@ -1,25 +1,48 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-const {resolve} = require('path');
+const { resolve } = require('path');
+const mongoose = require('mongoose');
+const { Chef, Recipe } = require('./model.js');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
 
-const css = resolve('views/style.css');
 
-// In-memory data storage
-// TODO: Replace with MongoDB
 var chefList = require('./data.js').chefs;
 var recipeList = require('./data.js').recipes;
 
+// Connection URL for your MongoDB server
+const mongoDBUrl = 'mongodb://127.0.0.1:27017/XA5OZH';
+
+// Connect to MongoDB using Mongoose
+mongoose.connect(mongoDBUrl)
+  .then(() => {
+    console.log('Connected to MongoDB successfully');
+    Chef.createCollection();
+    Recipe.createCollection();
+  })
+  .catch((err) => {
+    console.error('Error connecting to MongoDB:', err);
+  });
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads')
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.fieldname + '-' + Date.now() + '.png')
+  }
+});
+
+const upload = multer({ storage: storage });
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(express.static('public'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { headers: {'Content-Type': 'image/*'} }));
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.set('view engine', 'ejs');
-app.use(express.static(css));
-
-app.get('*/style.css', (req, res) => {
-  res.setHeader('Content-Type', 'text/css');
-  res.sendFile(css);
-});
 
 // Chef routes and controller
 const chefRouter = express.Router();
@@ -27,49 +50,96 @@ const chefRouter = express.Router();
 // POST /api/chefs
 // Add a chef to the collection
 // The user sends every information in the body
-chefRouter.post('/', (req, res) => {
-  const chef = req.body;
-  chefList.push(chef);
-  res.json(chef);
+chefRouter.post('/', upload.single('chefImage'), async (req, res) => {
+  const obj = {
+    name: req.body.name,
+    description: req.body.description,
+    chefImage: path.join('/uploads/' + req.file.filename)
+  };
+  try {
+    const newChef = new Chef(obj);
+    await newChef.save();
+    res.status(201);
+  } catch (error) {
+    res.status(500).json({ error: 'An error occurred while creating the Chef.' })
+  }
+  res.render('add_chefs');
 });
 
 // GET /api/chefs
 // Return all chefs from the collection
-chefRouter.get('/', (req, res) => {
-  let chefs = chefList;
-  res.render('chefs', {chefs});
-  // res.json(chefs);
+chefRouter.get('/', async (req, res) => {
+  const chefs = await Chef.find();
+  res.render('chefs', { chefs });
 });
 
 // GET /api/chefs/:chefId
 // Return only chef
 // The user has to define the chef's name with an ID
-chefRouter.get('/:chefId', (req, res) => {
-  const chefId = parseInt(req.params.chefId);
-  const chefData = chefList.find((chef) => chef.id === chefId);
-  res.render('chef', {chefData});
-  // res.json(chefData);
+chefRouter.get('/:chefId', async (req, res) => {
+  const chefId = req.params.chefId;
+  const chef = await Chef.findById(chefId);
+  res.render('chef', { chef });
 });
 
-// PUT /api/chefs/:chefId
-// Update a chef object in the collection
-chefRouter.put(':chefId', (req, res) => {
+// GET /api/chefs/update_chef/:chefId
+// Update page of a chef
+chefRouter.get('/update_chef/:chefId', async (req, res) => {
   const chefId = req.params.chefId;
-  const index = chefList.findIndex(obj => {
-    return obj.id === chefId;
-  });
-  if (index !== -1) {
-    chefList[index] = req.body;
+  const chef = await Chef.findById(chefId);
+  res.render('update_chef', { chef });
+});
+
+// POST /api/chefs/:chefId
+// Update a chef object in the collection
+chefRouter.post('/:chefId', upload.single('chefImage'), async (req, res) => {
+  const chefId = req.params.chefId;
+  const obj = {
+    name: req.body.name,
+    description: req.body.description,
+  };
+  if (req.file) {
+    const chef = await Chef.findById(chefId);
+    fs.unlink(chef.chefImage.slice(1), (err) => {
+      if (err) {
+        console.error('Error deleting file:', err);
+      } else {
+        console.log('File deleted successfully');
+      }
+    });
+    obj.chefImage = path.join('/uploads/' + req.file.filename);
   }
-  res.json(chefList);
+  try {
+    const newChef = await Chef.findByIdAndUpdate(chefId, obj);
+    await newChef.save();
+    res.status(201);
+  } catch (error) {
+    res.status(500).json({ error: 'An error occurred while update the Chef.' })
+  }
+  res.redirect(`/api/chefs/${chefId}`);
 });
 
 // DELETE /api/chefs/:chefId
 // Delete chef from collection based on ID
-chefRouter.delete(':chefId', (req, res) => {
+chefRouter.delete('/:chefId', async (req, res) => {
   const chefId = req.params.chefId;
-  chefs = chefList.filter(item => item.id !== chefId);
-  res.json(chefs);
+
+  try {
+      // Perform the deletion in the database
+      const chef = await Chef.findById(chefId);
+      fs.unlink(chef.chefImage.slice(1), (err) => {
+        if (err) {
+          console.error('Error deleting file:', err);
+        } else {
+          console.log('File deleted successfully');
+        }
+      });
+      await Chef.findByIdAndDelete(chefId);
+      res.status(200).json({ message: 'Chef deleted successfully' });;
+    } catch (error) {
+      console.error('Error deleting chef:', error.message);
+      res.status(500).send('Internal Server Error');
+    }
 });
 
 app.use('/api/chefs', chefRouter);
@@ -77,74 +147,124 @@ app.use('/api/chefs', chefRouter);
 // Recipe routes and controller
 const recipeRouter = express.Router();
 
-// - /api/recipes/:
-// 	- GET /api/recipes?chef=id - Receptek listázása séf szerint
-
 // POST /api/recipes
 // Add recipe to the collection
-recipeRouter.post('/', (req, res) => {
-  const recipeObj = req.body;
-  recipeLists.push(recipeObj);
-  let recipes = recipeList;
-  res.json(recipes);
+recipeRouter.post('/', upload.single('foodImage'),  async (req, res) => {
+  const chef = await Chef.findOne({ name: req.body.chef }).exec();
+  const obj = {
+    title: req.body.title,
+    description: req.body.description,
+    ingredients: req.body.ingredients.split('\n'),
+    instructions: req.body.instructions.split('\n'),
+    chef: req.body.chef,
+    chefId: chef._id,
+    foodImage: path.join('/uploads/' + req.file.filename)
+  };
+  try {
+    const newRecipe = new Recipe(obj);
+    await newRecipe.save();
+    res.status(201);
+  } catch (error) {
+    res.status(500).json({ error: 'An error occurred while creating the Recipe.' })
+  }
+  res.render('add_recipes');
 });
 
-// GET /api/recipes
-// Return all recipes from collection
-recipeRouter.get('/', (req, res) => {
-  // res.json(recipes);
-  const chefId = parseInt(req.query.chef);
+recipeRouter.get('/', async (req, res) => {
+  const chefId = req.query.chefId;
   if (chefId) {
-    const recipeData = recipeList.find((recipe) => recipe.chefId === chefId);
-    // res.json(recipeData);
-    // console.log(recipeData);
-    res.render('food', {recipeData});
+    // - /api/recipes/:
+    // 	- GET /api/recipes?chefId=id - Receptek listázása séf szerint
+    const recipes = await Recipe.find({ chefId: chefId }).exec();
+    res.render('recipes', { recipes });
   } else {
-    let recipes = recipeList;
-    res.render('recipes', {recipes});
+    // GET /api/recipes
+    // Return all recipes from collection
+    const recipes = await Recipe.find();
+    res.render('recipes', { recipes });
   }
 });
-
-// GET /api/recipes?chef=id
-// Return recipes which are connected to a particular chef
-// recipeRouter.get('/', (req, res) => {
-//   console.log("stom");
-//   const chef = req.query.chef;
-//   const recipeData = recipes.filter((recipe) => recipe.chefId === chef);
-//   res.json(recipeData);
-//   // res.render('food', {recipeData});
-// });
 
 // GET /api/recipes/:recipeId
 // Return only recipe
 // The user has to define the recipe's name with an ID
-recipeRouter.get('/:recipeId', (req, res) => {
-  const recipeId = parseInt(req.params.recipeId);
-  const recipeData = recipeList.find((recipe) => recipe.id === recipeId);
-  res.render('food', {recipeData});
+recipeRouter.get('/:recipeId', async (req, res) => {
+  const recipeId = req.params.recipeId;
+  const recipe = await Recipe.findById(recipeId)
+  res.render('food', { recipe });
 });
 
-
-// PUT /api/recipes/:recipeId
-// Update a recipe object in the collection
-recipeRouter.put(':recipeId', (req, res) => {
+// GET /api/recipes/update_recipe/:recipeId
+// Update page of a recipe
+recipeRouter.get('/update_recipe/:recipeId', async (req, res) => {
   const recipeId = req.params.recipeId;
-  const index = recipeList.findIndex(obj => {
-    return obj.id === recipeId;
-  });
-  if (index !== -1) {
-    recipeList[index] = req.body;
+  const recipeData = await Recipe.findById(recipeId);
+  const recipe = {
+    title: recipeData.title,
+    description: recipeData.description,
+    ingredients: recipeData.ingredients.join("\n"),
+    instructions: recipeData.instructions.join('\n'),
+    chef: recipeData.chef,
+    _id: recipeData._id
   }
-  let recipes = recipeList;
-  res.json(recipes);
+  res.render('update_recipe', { recipe });
+});
+
+// POST /api/recipes/:recipeId
+// Update a recipe object in the collection
+recipeRouter.post('/:recipeId', upload.single('foodImage'), async (req, res) => {
+  const recipeId = req.params.recipeId;
+  try {
+    const chef = await Chef.findOne({ name: req.body.chef }).exec();
+    const obj = {
+      title: req.body.title,
+      description: req.body.description,
+      ingredients: req.body.ingredients.split('\n'),
+      instructions: req.body.instructions.split('\n'),
+      chef: req.body.chef,
+      chefId: chef._id
+    };
+
+    if (req.file) {
+      const recipe = await Recipe.findById(recipeId);
+      fs.unlink(recipe.foodImage.slice(1), (err) => {
+        if (err) {
+          console.error('Error deleting file:', err);
+        } else {
+          console.log('File deleted successfully');
+        }
+      });
+      obj.foodImage = path.join('/uploads/' + req.file.filename);
+    }
+
+    await Recipe.findByIdAndUpdate(recipeId, obj);
+    res.status(201).redirect(`/api/recipes/${recipeId}`);
+  } catch (error) {
+    res.status(500).json({ error: 'An error occurred while updating the Recipe.' });
+  }
 });
 
 // DELETE /api/recipes/:recipeId
 // Delete recipe from collection based on ID
-recipeRouter.delete(':recipeId', (req, res) => {
+recipeRouter.delete('/:recipeId', async (req, res) => {
   const recipeId = req.params.recipeId;
-  recipes = recipeList.filter(item => item.id !== recipeId);
-  res.json(recipes);
+
+  try {
+      // Perform the deletion in the database
+      const recipe = await Recipe.findById(recipeId);
+      fs.unlink(recipe.foodImage.slice(1), (err) => {
+        if (err) {
+          console.error('Error deleting file:', err);
+        } else {
+          console.log('File deleted successfully');
+        }
+      });
+      await Recipe.findByIdAndDelete(recipeId);
+      res.status(200).json({ message: 'Recipe deleted successfully' });;
+    } catch (error) {
+      console.error('Error deleting chef:', error.message);
+      res.status(500).send('Internal Server Error');
+    }
 });
 
 app.use('/api/recipes', recipeRouter);
@@ -155,14 +275,6 @@ app.get('/api/add_recipes', (req, res) => {
 
 app.get('/api/add_chefs', (req, res) => {
   res.render('add_chefs');
-});
-
-// Get recipes by chef
-app.get('/api/chefs/:chefId/recipes', (req, res) => {
-  const chefId = parseInt(req.params.chefId);
-  const recipes = recipeList.filter((recipe) => recipe.chefId === chefId);
-  res.render('recipes', {recipes});
-  // res.json(chefRecipes);
 });
 
 // Start the server

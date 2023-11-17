@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Add Chefs</title>
+  <title>Update Chef</title>
   <link rel="stylesheet" type="text/css" href="/styles/style.css">
 </head>
 
@@ -14,18 +14,18 @@
 
   <div class="content-container">
     <h1>Chef Form</h1>
-    <form id="api/chefs" action="/api/chefs" method="POST" enctype="multipart/form-data" target="_self">
+    <form id="api/chefs/<%= chef._id %>" action="/api/chefs/<%= chef._id %>" method="POST" enctype="multipart/form-data" target="_self">
       <div class="form-group">
         <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required>
+        <input type="text" id="name" name="name" value="<%= chef.name %>" >
       </div>
       <div class="form-group">
         <label for="description">Bio:</label>
-        <textarea id="description" name="description" rows="4" required></textarea>
+        <textarea id="description" name="description" rows="4"><%= chef.description %></textarea>
       </div>
       <div class="form-group">
         <label for="chefImage">Picture from the Chef:</label>
-        <input type="file" id="chefImage" name="chefImage" required>
+        <input type="file" id="chefImage" name="chefImage">
       </div>
       <button type="submit">Submit</button>
     </form>

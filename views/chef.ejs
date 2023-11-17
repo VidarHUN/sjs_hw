@@ -6,19 +6,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Chef</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" type="text/css" href="/styles/style.css">
 </head>
 
 <body>
     <%- include('navbar') %>
 
-    <div class="content-container">
-        <img src="https://placehold.co/600" alt="Chef Image">
-        <h1><%= chefData.name %></h1>
-        <h2>Bio</h2>
-        <p><%= chefData.bio %></p>
-    </div>
+        <div class="content-container">
+            <img src="<%= chef.chefImage %>" alt="Chef Image" width="600" height="600">
+            <h1>
+                <%= chef.name %>
+            </h1>
+            <h2>Description</h2>
+            <p>
+                <%= chef.description %>
+            </p>
+            <h2>Update</h2>
+            <p><a href="/api/chefs/update_chef/<%= chef._id %>">Update</a></p>
+            <h2>Delete Chef</h2>
+            <button onclick="deleteChef('<%= chef._id %>')">Delete Chef</button>
 
+
+            <script>
+                async function deleteChef(chefId) {
+                    const confirmation = confirm('Are you sure you want to delete this chef?');
+                    if (confirmation) {
+                        try {
+                            const response = await fetch(`/api/chefs/${chefId}`, {
+                                method: 'DELETE',
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status}`);
+                            }
+
+                            console.log('Chef deleted successfully');
+                            window.location.href = '/api/chefs';
+                        } catch (error) {
+                            console.error('Error deleting chef:', error.message);
+                        }
+                    }
+                }
+            </script>
+        </div>
 </body>
 
 </html>

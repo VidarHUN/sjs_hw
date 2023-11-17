@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Recipes</title>
-  <link rel="stylesheet" href="style.css" type="text/css">
+  <link rel="stylesheet" type="text/css" href="/styles/style.css">
 </head>
 
 <body>
@@ -14,14 +14,13 @@
 
   <div class="card-container">
     <% for (const recipe of recipes) { %>
-      <div class="card" onclick="window.location.href='/api/recipes/<%- recipe.id %>'">
+      <div class="card" onclick="window.location.href='/api/recipes/<%- recipe._id %>'">
         <div class="card-title"><%= recipe.title %></div>
-        <img class="card-image" src="https://placehold.co/200" alt="Card Image">
+        <img class="card-image" src="<%= recipe.foodImage %>" alt="Card Image" width="200" height="200">
         <p><%= recipe.description %></p>
       </div>
     <% } %>
   </div>
-
 </body>
 
 </html>
