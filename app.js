@@ -8,10 +8,6 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 
-
-var chefList = require('./data.js').chefs;
-var recipeList = require('./data.js').recipes;
-
 // Connection URL for your MongoDB server
 const mongoDBUrl = 'mongodb://127.0.0.1:27017/XA5OZH';
 
@@ -41,7 +37,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static('public'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { headers: {'Content-Type': 'image/*'} }));
-// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.set('view engine', 'ejs');
 
 // Chef routes and controller
@@ -79,7 +74,12 @@ chefRouter.get('/', async (req, res) => {
 chefRouter.get('/:chefId', async (req, res) => {
   const chefId = req.params.chefId;
   const chef = await Chef.findById(chefId);
-  res.render('chef', { chef });
+
+  if (!chef) {
+    res.status(404).json('Chef document not found');
+  } else {
+    res.render('chef', { chef });
+  }
 });
 
 // GET /api/chefs/update_chef/:chefId
@@ -191,7 +191,12 @@ recipeRouter.get('/', async (req, res) => {
 recipeRouter.get('/:recipeId', async (req, res) => {
   const recipeId = req.params.recipeId;
   const recipe = await Recipe.findById(recipeId)
-  res.render('food', { recipe });
+
+  if (!recipe) {
+    res.status(404).json('Recipe document not found');
+  } else {
+    res.render('food', { recipe });
+  }
 });
 
 // GET /api/recipes/update_recipe/:recipeId
@@ -282,3 +287,5 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+
+module.exports = app;
